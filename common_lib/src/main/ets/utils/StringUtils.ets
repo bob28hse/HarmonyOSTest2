@@ -1,77 +1,64 @@
+import pako from 'pako';
 import { cryptoFramework } from '@kit.CryptoArchitectureKit';
 import { util, buffer } from '@kit.ArkTS';
-import { zlib } from '@kit.BasicServicesKit'; // Standard Kit
-import { fileIo as fs } from '@kit.CoreFileKit';
+import { InitConst } from './InitConst';
 
 export class StringUtils {
-  static async aesDecryptJSON(base64Ciphertext: string, context: Context): Promise<object | null> {
-    const KEY_STR = "your_16_byte_key";
-    const IV_STR = "your_16_byte_iv_";
+  private static readonly AES_KEY = "your_16_byte_key";
+  private static readonly AES_IV = "your_16_byte_iv_";
 
+  // CryptoFramework cannot auto-detect
+  private static getAesAlg(keyLength: number): string {
+    if (keyLength === 32) return 'AES256';
+    if (keyLength === 24) return 'AES192';
+    if (keyLength === 16) return 'AES128';
+    throw new Error(`Invalid AES key length: ${keyLength} bytes. Must be 16, 24, or 32.`);
+  }
+
+  public static async aesDecryptJSON<T>(base64Ciphertext: string): Promise<T | null> {
     try {
-      // 1. AES Decrypt (Strict API 20 Typing)
-      let symKeyGenerator = cryptoFramework.createSymKeyGenerator('AES128');
-      let keyData = new Uint8Array(buffer.from(KEY_STR, 'utf-8').buffer);
-      let symKey = await symKeyGenerator.convertKey({ data: keyData });
+      // 1. Base64 Decode + AES Decrypt
 
-      let decoder = cryptoFramework.createCipher('AES128|CBC|PKCS7');
-      let ivData = new Uint8Array(buffer.from(IV_STR, 'utf-8').buffer);
-      let ivSpec: cryptoFramework.IvParamsSpec = { algName: 'IvParamsSpec', iv: { data: ivData } };
+      // AES_Key
+      const aesAlg = StringUtils.getAesAlg(InitConst.AES_KEY.length);
+      const symKey = await cryptoFramework.createSymKeyGenerator(aesAlg)
+        .convertKey({ data: new Uint8Array(buffer.from(InitConst.AES_KEY, 'utf-8').buffer) });
+
+      // IV Spec (Explicit type)
+      let ivSpec: cryptoFramework.IvParamsSpec = {
+        algName: 'IvParamsSpec',
+        iv: { data: new Uint8Array(buffer.from(InitConst.AES_IV, 'utf-8').buffer) }
+      };
+
+      // **Start Decode**
+      const decoder = cryptoFramework.createCipher(`${aesAlg}|CBC|PKCS7`);
       await decoder.init(cryptoFramework.CryptoMode.DECRYPT_MODE, symKey, ivSpec);
 
-      let ciphertext = new util.Base64Helper().decodeSync(base64Ciphertext);
-      let decryptBlob = await decoder.doFinal({ data: ciphertext });
-      let rawData = decryptBlob.data;
+      const ciphertext = new util.Base64Helper().decodeSync(base64Ciphertext);
+      const decryptBlob = await decoder.doFinal({ data: ciphertext });
+      const rawData = decryptBlob.data;
 
-      // 2. Gzip Logic (Handled via sandboxed file if decompressData is missing)
-      let finalJson: string;
+      // 2. In-Memory Gunzip
+      let finalString: string;
+
+      // Gzip
       if (rawData[0] === 0x1f && rawData[1] === 0x8b) {
-        // Replicates Swift's gunzipped() via sandboxed temp file
-        finalJson = await StringUtils.stableGunzip(rawData, context);
+        // Direct in-memory decompression
+        const decompressed = pako.ungzip(rawData) as Uint8Array;
+        finalString = buffer.from(decompressed).toString('utf-8');
       } else {
-        finalJson = buffer.from(rawData).toString('utf-8');
+        finalString = buffer.from(rawData).toString('utf-8');
       }
 
-      return JSON.parse(finalJson);
+      console.log(finalString);
+
+      // 3. Unserialize
+      return JSON.parse(finalString) as T;
+
     } catch (err) {
-      console.error("Decryption pipeline failed", err);
+      console.error("Decryption/Decompression failed", err);
       return null;
     }
   }
 
-  /**
-   * Ensures compatibility across all API 20 builds by using the
-   * guaranteed decompressFile API.
-   */
-  static async stableGunzip(data: Uint8Array, context: Context): Promise<string> {
-    const tempIn = `${context.tempDir}/temp.gz`;
-    const tempOut = `${context.tempDir}/out`;
-
-    // Write buffer to temp sandbox file
-    let file = fs.openSync(tempIn, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
-    fs.writeSync(file.fd, data.buffer);
-    fs.closeSync(file);
-
-    // Standard API 20 file decompression
-    await zlib.decompressFile(tempIn, tempOut);
-
-    // Read result
-    let resFile = fs.openSync(tempOut, fs.OpenMode.READ_ONLY);
-    let stat = fs.statSync(tempOut);
-    let buf = new ArrayBuffer(stat.size);
-    fs.readSync(resFile.fd, buf);
-    fs.closeSync(resFile);
-
-    return buffer.from(buf).toString('utf-8');
-  }
-
-  // ----------------------
-  static isJsonString(str: string): boolean {
-    try {
-      JSON.parse(str);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
 }

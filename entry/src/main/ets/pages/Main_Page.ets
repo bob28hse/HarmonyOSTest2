@@ -1,11 +1,10 @@
-import { Base_ViewModel } from 'common_lib';
-import { router } from '@kit.ArkUI';
+import { UserViewModel } from 'common_lib';
 
 @Entry
 @ComponentV2
 struct Index {
-  @Local message: string = 'Hello World';
-  @Local model: Base_ViewModel = new Base_ViewModel();
+  @Local message: string = 'MainPage';
+  @Local model: UserViewModel = new UserViewModel();
 
   build() {
     RelativeContainer() {
@@ -20,13 +19,6 @@ struct Index {
         .onClick(() => {
           this.message = 'Welcome';
           this.model.refreshProfile();
-          try {
-            router.pushUrl({
-              url: 'pages/Main_Page',
-            }, router.RouterMode.Single);
-          } catch (e) {
-          }
-
         })
     }
     .height('100%')
