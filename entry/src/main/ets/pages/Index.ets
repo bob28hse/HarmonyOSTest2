@@ -1,5 +1,5 @@
 import { Base_ViewModel } from 'common_lib';
-import { router } from '@kit.ArkUI';
+import { Main } from './Main_Page'
 
 @Entry
 @ComponentV2
@@ -7,29 +7,42 @@ struct Index {
   @Local message: string = 'Hello World';
   @Local model: Base_ViewModel = new Base_ViewModel();
 
-  build() {
-    RelativeContainer() {
-      Text(this.message)
-        .id('HelloWorld')
-        .fontSize($r('app.float.page_text_font_size'))
-        .fontWeight(FontWeight.Bold)
-        .alignRules({
-          center: { anchor: '__container__', align: VerticalAlign.Center },
-          middle: { anchor: '__container__', align: HorizontalAlign.Center }
-        })
-        .onClick(() => {
-          this.message = 'Welcome';
-          this.model.refreshProfile();
-          try {
-            router.pushUrl({
-              url: 'pages/Main_Page',
-            }, router.RouterMode.Single);
-          } catch (e) {
-          }
+  pageStack: NavPathStack = new NavPathStack();
 
-        })
+  @Builder
+  PageMap(name: string) {
+    if (name === 'Main') {
+      Main()
     }
-    .height('100%')
-    .width('100%')
+  }
+
+  build() {
+    Navigation(this.pageStack) {
+      RelativeContainer() {
+        Text(this.message)
+          .id('HelloWorld')
+          .fontSize($r('app.float.page_text_font_size'))
+          .fontWeight(FontWeight.Bold)
+          .alignRules({
+            center: { anchor: '__container__', align: VerticalAlign.Center },
+            middle: { anchor: '__container__', align: HorizontalAlign.Center }
+          })
+          .onClick(async () => {
+            this.message = 'Welcome';
+            await this.model.refreshProfile();
+
+            const data: Record<string, string | number> = {
+              "info": "Hello",
+              "count": 1
+            };
+
+            this.pageStack.pushPathByName('Main', this.model.item);
+          })
+      }
+      .height('100%')
+      .width('100%')
+    }
+    .navDestination(this.PageMap)
+    .title("Index")
   }
 }

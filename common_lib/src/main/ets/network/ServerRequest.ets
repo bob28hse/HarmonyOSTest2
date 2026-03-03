@@ -1,6 +1,25 @@
 import { rcp } from '@kit.RemoteCommunicationKit';
 import { util, url as urlLib, taskpool } from '@kit.ArkTS';
 
+// Common API JSON
+export interface BaseInitedDataRequest {
+  msg: string | null;
+  results: Object;
+  encrypt: number;
+}
+
+export interface BaseDebugRequest {
+  debug_notes: string[];
+}
+
+export interface BaseRequest {
+  status: number;
+  result: number;
+  data: Object; //Record<string, Object>;
+  encrypt: number;
+  debug: BaseDebugRequest;
+  platform: string;
+}
 
 //@Concurrent
 //async function decryptAndParseTask(buffer: ArrayBuffer): Promise<object> {
@@ -26,7 +45,7 @@ export class ServerRequest {
   // TODO future: Interceptors for dynamic logic
 
   // T for Model
-  static async request(url: string, params?: Record<string, string>, method: string = 'POST'): Promise<Record<string, Object>> {
+  static async request(url: string, params?: Record<string, string>, method: string = 'POST'): Promise<BaseRequest> {
     try {
       // TODO: Guard invalid parameters
 
@@ -40,19 +59,22 @@ export class ServerRequest {
       })
       const finalUrl = `${url}?${urlParams.toString()}`;
 
+      // RCP request
       const request = new rcp.Request(finalUrl, method);
-      console.log('1st: ' + JSON.stringify(request.headers));
+      console.log('1st header: ' + JSON.stringify(request.headers));
 
+      // Cookie preserving, since RCP is stateless
       if (ServerRequest.sessionCookie != "") {
         request.headers = {
           'cookie': ServerRequest.sessionCookie
         };
       }
-      console.log('2nd: ' + JSON.stringify(request.headers));
+      console.log('2nd header: ' + JSON.stringify(request.headers));
 
+      // Fetch AFTER ALL SETUP
       const response = await ServerRequest.session.fetch(request);
 
-      // Get cookies for preserving sessionID
+      // Get cookies for preserving sessionID (for 1st time)
       if (ServerRequest.sessionCookie == '') {
         const setCookie = response.headers['set-cookie'];
         console.info("Saved Cookie: " + setCookie);
@@ -74,7 +96,7 @@ export class ServerRequest {
         const jsonString = decoder.decodeToString(new Uint8Array(response.body as ArrayBuffer));
         console.log("jsonString: ", jsonString);
 
-        const result = JSON.parse(jsonString) as Record<string, Object>;
+        const result = JSON.parse(jsonString) as BaseRequest;
         console.info("Parsed Object: " + JSON.stringify(result, null, 2));
 
         return result;

@@ -15,7 +15,7 @@ export class StringUtils {
     throw new Error(`Invalid AES key length: ${keyLength} bytes. Must be 16, 24, or 32.`);
   }
 
-  public static async aesDecryptJSON<T>(base64Ciphertext: string): Promise<T | null> {
+  public static async aesDecryptJSON<T>(base64Ciphertext: string): Promise<T | undefined> {
     try {
       // 1. Base64 Decode + AES Decrypt
 
@@ -50,14 +50,14 @@ export class StringUtils {
         finalString = buffer.from(rawData).toString('utf-8');
       }
 
-      console.log(finalString);
+      console.log("Final: " + finalString);
 
       // 3. Unserialize
       return JSON.parse(finalString) as T;
 
     } catch (err) {
       console.error("Decryption/Decompression failed", err);
-      return null;
+      return undefined;
     }
   }
 

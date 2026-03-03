@@ -1,11 +1,16 @@
-import { ServerRequest } from '../network/ServerRequest';
-import { StringUtils } from '../../../../Index';
+import { BaseInitedDataRequest, BaseRequest, ServerRequest } from '../network/ServerRequest';
+import { StringUtils } from '../utils/StringUtils';
+import { Base_Model } from '../model/Base_Model'
+import { JSON } from '@kit.ArkTS';
+import { UserModel } from '../model/UserModel';
 
 @ObservedV2
 export class Base_ViewModel {
   // @Trace ensures any View bound to these will update instantly
   @Trace public isLoading: boolean = false;
   @Trace public errorMessage: string = '';
+
+  @Trace item?: Base_Model;
 
   async refreshProfile() {
     this.isLoading = true;
@@ -17,13 +22,16 @@ export class Base_ViewModel {
       };
       const data = await ServerRequest.request("https://www.28hse.com/init_app.php", params);
 
-      const homeData = await ServerRequest.request("https://www.28hse.com");
-      const homeData2 = homeData['data'] as Record<string, Object>;
-      const homeData3 = homeData2['results'].toString();
+      const testSearch = await ServerRequest.request("https://www.28hse.com/en/property/dosearch");
+      const testResult = testSearch.data as BaseInitedDataRequest;
+      const d1 = await StringUtils.aesDecryptJSON<UserModel>(testResult.results as string);
+      //console.log("Test: " + JSON.stringify(d1));
+      console.log("UserModel: " + d1?.buyRent);
 
-      console.log(homeData3);
+      //const homeData = await ServerRequest.request("https://www.28hse.com");
+      //const decrypted = await StringUtils.aesDecryptJSON<Base_Model>(homeData.data as string);
+      //console.log("Slogan: " + decrypted?.slogan);
 
-      const decrypted = StringUtils.aesDecryptJSON<Record<string, Object>>(homeData3);
 
     } catch (e) {
       // Handle error (e.g., show toast)
