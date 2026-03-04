@@ -1,0 +1,1 @@
+export { Schoolnet_Model } from './Schoolnet_Model';

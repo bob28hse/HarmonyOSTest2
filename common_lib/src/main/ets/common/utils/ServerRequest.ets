@@ -1,5 +1,5 @@
 import { rcp } from '@kit.RemoteCommunicationKit';
-import { util, url as urlLib, taskpool } from '@kit.ArkTS';
+import { util, url as urlLib } from '@kit.ArkTS';
 
 // Common API JSON
 export interface BaseInitedDataRequest {
@@ -20,18 +20,6 @@ export interface BaseRequest {
   debug: BaseDebugRequest;
   platform: string;
 }
-
-//@Concurrent
-//async function decryptAndParseTask(buffer: ArrayBuffer): Promise<object> {
-  // Use util.TextDecoder to convert bytes to string
-  //let decoder = util.TextDecoder.create('utf-8');
-  //let jsonString = decoder.decode(new Uint8Array(buffer));
-
-  // let decrypted = myDecrypt(jsonString);
-
-  //return JSON.parse(jsonString);
-//}
-
 
 export class ServerRequest {
 
@@ -59,9 +47,8 @@ export class ServerRequest {
       })
       const finalUrl = `${url}?${urlParams.toString()}`;
 
-      // RCP request
+      // RCP request (no header for request)
       const request = new rcp.Request(finalUrl, method);
-      console.log('1st header: ' + JSON.stringify(request.headers));
 
       // Cookie preserving, since RCP is stateless
       if (ServerRequest.sessionCookie != "") {

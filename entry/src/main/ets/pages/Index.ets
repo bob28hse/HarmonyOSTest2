@@ -1,18 +1,20 @@
-import { Base_ViewModel } from 'common_lib';
-import { Main } from './Main_Page'
+import * as AllPages from '../features'
 
+// Standard Entry Point == Splash!
 @Entry
 @ComponentV2
 struct Index {
   @Local message: string = 'Hello World';
-  @Local model: Base_ViewModel = new Base_ViewModel();
+  @Local count: number = 0;
 
   pageStack: NavPathStack = new NavPathStack();
 
+  // Method 1 using PagesMap for swapping layout (e.g. SquareFoot)
+  // Method 2 using route_map for Lazy Loads
   @Builder
-  PageMap(name: string) {
-    if (name === 'Main') {
-      Main()
+  PagesMap(name: string) {
+    if (name === 'Home') {
+      AllPages.HomePage();
     }
   }
 
@@ -28,21 +30,27 @@ struct Index {
             middle: { anchor: '__container__', align: HorizontalAlign.Center }
           })
           .onClick(async () => {
+            // TODO Pass splash screen related
+            this.pageStack.pushPathByName('Home', undefined);
+
             this.message = 'Welcome';
-            await this.model.refreshProfile();
+            //await this.model.refreshProfile();
+            //console.log("Finish Refreshing");
 
-            const data: Record<string, string | number> = {
-              "info": "Hello",
-              "count": 1
-            };
-
-            this.pageStack.pushPathByName('Main', this.model.item);
+          })
+        Button(`${this.count}`, { type: ButtonType.Normal, stateEffect: true })
+          .borderRadius(8)
+          .backgroundColor(0x317aff)
+          .width(90)
+          .height(40)
+          .onClick(() => {
+            this.count++;
           })
       }
       .height('100%')
       .width('100%')
     }
-    .navDestination(this.PageMap)
+    .navDestination(this.PagesMap)
     .title("Index")
   }
 }

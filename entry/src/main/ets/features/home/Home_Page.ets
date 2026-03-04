@@ -1,11 +1,7 @@
-import { UserViewModel } from 'common_lib';
-import { Base_Model } from 'common_lib';
-
-@Entry
 @ComponentV2
-export struct Main {
-  @Local message: string = 'MainPage';
-  @Local model: UserViewModel = new UserViewModel();
+export struct HomePage {
+  @Local message: string = 'Home Page';
+  @Local count: number = 0;
 
   @Local pathStack: NavPathStack = new NavPathStack();
 
@@ -25,21 +21,30 @@ export struct Main {
 
 
           })
+        Button(`${this.count}`, { type: ButtonType.Normal, stateEffect: true })
+          .borderRadius(8)
+          .backgroundColor(0x317aff)
+          .width(90)
+          .height(40)
+          .onClick(() => {
+            this.count++;
+          })
       }
       .height('100%')
       .width('100%')
     }
     .onReady((context: NavDestinationContext) => {
       return;
+      /*
       this.pathStack = context.pathStack;
       console.info('Current page ID: ' + context.pathInfo.name);
 
-      //const sharedItem = this.pathStack.getParamByName("Main")[0] as Base_Model;
       const sharedItem = context.pathInfo.param as Base_Model;
       console.log("Main Page: " + sharedItem.slogan);
       console.log("Full: " + JSON.stringify(sharedItem));
 
       this.message = sharedItem.slogan;
+      */
     })
   }
 }
