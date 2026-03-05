@@ -1,4 +1,4 @@
-import { Schoolnet_ViewModel } from "common_lib";
+import { Schoolnet_ViewModel, Schoolnet_ListItem } from "common_lib";
 
 @ComponentV2
 export struct SchoolNetPage {
@@ -35,7 +35,8 @@ export struct SchoolNetPage {
           Repeat(this.viewModel.items)
             .each((listChild) => {
               ListItem() {
-                Text(listChild.item.name)
+                // if objects too large, then should pass required param
+                Schoolnet_ListItem(listChild.item)
               }
             })
             .key((item) => item.id.toString())

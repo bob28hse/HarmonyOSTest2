@@ -6,8 +6,7 @@ import { zlib } from '@kit.BasicServicesKit';
 @Concurrent
 export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string, aesIv: string): Promise<T | undefined> {
   try {
-    console.time('myTimer');
-    console.log("Encrypted: " + ciphertext);
+    console.time('decryptTimer');
 
     const keyBytes = new Uint8Array(buffer.from(aesKey, 'utf-8').buffer);
     const ivBytes = new Uint8Array(buffer.from(aesIv, 'utf-8').buffer);
@@ -22,8 +21,6 @@ export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string,
 
     // 2. Generate Key
     const symKey = await cryptoFramework.createSymKeyGenerator(aesAlg).convertKey({ data: keyBytes });
-    console.timeLog('myTimer');
-
     let ivSpec: cryptoFramework.IvParamsSpec = {
       algName: 'IvParamsSpec',
       iv: { data: ivBytes }
@@ -32,12 +29,10 @@ export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string,
     // 3. Decrypt
     const cipher = cryptoFramework.createCipher(`${aesAlg}|CBC|PKCS7`);
     await cipher.init(cryptoFramework.CryptoMode.DECRYPT_MODE, symKey, ivSpec);
-    console.timeLog('myTimer');
-
     const decodedBuffer = new util.Base64Helper().decodeSync(ciphertext);
     const decryptBlob = await cipher.doFinal({ data: decodedBuffer });
     const rawData = decryptBlob.data;
-    console.timeLog('myTimer');
+    console.timeLog('decryptTimer');
 
     // 4. Native Decompression (**MAIN ISSUE)
     let finalString: string = "";
@@ -114,13 +109,12 @@ export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string,
       finalString = buffer.from(rawData).toString('utf-8');
     }
 
-
-    console.timeLog('myTimer');
+    console.timeLog('decryptTimer');
     console.log("After unzip: " + finalString);
 
     // 5. Parse JSON
     const result = JSON.parse(finalString) as T;
-    console.timeEnd('myTimer');
+    console.timeEnd('decryptTimer');
 
     return result;
 

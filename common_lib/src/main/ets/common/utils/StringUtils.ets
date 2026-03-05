@@ -1,4 +1,3 @@
-import pako from 'pako';
 import { cryptoFramework } from '@kit.CryptoArchitectureKit';
 import { util, buffer } from '@kit.ArkTS';
 import { InitConst } from './InitConst';
@@ -15,6 +14,8 @@ export class StringUtils {
     throw new Error(`Invalid AES key length: ${keyLength} bytes. Must be 16, 24, or 32.`);
   }
 
+  // pako TOO SLOW
+  /*
   public static async aesDecryptJSON<T>(base64Ciphertext: string): Promise<T | undefined> {
     try {
       // 1. Base64 Decode + AES Decrypt
@@ -60,5 +61,5 @@ export class StringUtils {
       return undefined;
     }
   }
-
+  */
 }

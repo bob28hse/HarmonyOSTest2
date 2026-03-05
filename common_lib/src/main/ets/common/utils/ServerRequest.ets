@@ -35,8 +35,8 @@ export class ServerRequest {
   static async request(url: string, params?: Record<string, string>, method: string = 'POST'): Promise<BaseRequest> {
     try {
       // TODO: Guard invalid parameters
-
       console.info("Start Request...");
+      console.time('requestTimer');
 
       // Construct the URL based on params
       const safeParams = params ?? {};
@@ -67,7 +67,6 @@ export class ServerRequest {
 
         if (setCookie) {
           ServerRequest.sessionCookie = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
-          console.info("[Session] Synced ID: " + ServerRequest.sessionCookie);
         }
       }
 
@@ -77,13 +76,12 @@ export class ServerRequest {
 
       // Check if body exists and convert to ArrayBuffer for TaskPools
       if (response.body) {
-        // Use 'decodeToString' instead of 'decode'
         const decoder = util.TextDecoder.create('utf-8');
         const jsonString = decoder.decodeToString(new Uint8Array(response.body as ArrayBuffer));
         console.log("jsonString: ", jsonString);
 
         const result = JSON.parse(jsonString) as BaseRequest;
-        console.info("Parsed Object: " + JSON.stringify(result, null, 2));
+        console.timeEnd('requestTimer');
 
         return result;
       }

@@ -26,12 +26,16 @@ export class Base_ViewModel<T extends Base_Model<BaseSearch_Model, BaseDetail_Mo
     return {};
   }
 
-  async initializeModelList() {//(data: Array<Record<string, Object>>) {
+  //(data: Array<Record<string, Object>>) {
+  async initializeModelList() {
+    console.time('modelTimer');
     const data = await this.requestData();
+    console.timeLog('modelTimer');
     const dataItems = JsonUtils.getArray(data, 'Items');
     const factory = this.getFactory();
     this.items = dataItems.map(item => factory(item));
     console.log('Initialize Success!');
+    console.timeEnd('modelTimer');
   }
 
   async requestData(): Promise<Record<string, Object>> {
@@ -64,12 +68,9 @@ export class Base_ViewModel<T extends Base_Model<BaseSearch_Model, BaseDetail_Mo
         console.log("Finished Decryption!");
       }
 
-      console.log("Result Json: " + JSON.stringify(result));
       return result;
 
-      //const testSearch = await ServerRequest.request("https://www.28hse.com/en/property/dosearch");
-
-      // --OLD--
+      // --OLD-- (JSON
       //const d1 = await StringUtils.aesDecryptJSON<UserModel>(testResult.results as string);
 
     } catch (err) {
