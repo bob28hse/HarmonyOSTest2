@@ -107,9 +107,8 @@ export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string,
       let decoder = util.TextDecoder.create('utf-8');
       finalString = decoder.decodeToString(actualBytes);
       const match = finalString.match(/^\{[\s\S]*\}|\[[\s\S]*\]/);
-      if (match) {
+      if (match)
         finalString = match[0];
-      }
 
     } else {
       finalString = buffer.from(rawData).toString('utf-8');
