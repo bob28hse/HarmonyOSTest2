@@ -4,7 +4,7 @@ import { util, url as urlLib } from '@kit.ArkTS';
 // Common API JSON
 export interface BaseInitedDataRequest {
   msg: string | null;
-  results: Object;
+  results: Record<string, Object>;
   encrypt: number;
 }
 
@@ -15,20 +15,19 @@ export interface BaseDebugRequest {
 export interface BaseRequest {
   status: number;
   result: number;
-  data: Object; //Record<string, Object>;
+  data: Record<string, Object>;
   encrypt: number;
   debug: BaseDebugRequest;
   platform: string;
 }
 
 export class ServerRequest {
-
   // Create the session ONCE; Configuration is for EVERY REQUEST unless overrides by request
   private static sessionConfig: rcp.SessionConfiguration = {
 
   };
   private static session = rcp.createSession(ServerRequest.sessionConfig);
-  private static sessionCookie: string = "";
+  public static sessionCookie: string = "";
 
   // TODO future: Interceptors for dynamic logic
 

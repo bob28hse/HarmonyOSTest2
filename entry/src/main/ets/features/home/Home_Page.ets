@@ -1,15 +1,21 @@
+import { Home_ViewModel } from "common_lib";
+
+// Suppose here will receive a bunch of ApiUrls (after initApp in Splash)
+// => save into GlobalKeys / pass to the next page viewModel
+// => onReady to construct the page
 @ComponentV2
 export struct HomePage {
   @Local message: string = 'Home Page';
   @Local count: number = 0;
 
   @Local pathStack: NavPathStack = new NavPathStack();
+  @Local viewModel: Home_ViewModel = new Home_ViewModel();
 
   build() {
     NavDestination(){
       RelativeContainer() {
         Text(this.message)
-          .id('HelloWorld')
+          .id('HomeId')
           .fontSize($r('app.float.page_text_font_size'))
           .fontWeight(FontWeight.Bold)
           .alignRules({
@@ -17,9 +23,9 @@ export struct HomePage {
             middle: { anchor: '__container__', align: HorizontalAlign.Center }
           })
           .onClick(() => {
-            this.message = 'Welcome2';
+            this.message = 'Clicked Home';
 
-
+            this.pathStack.pushPathByName('Schoolnet', undefined);
           })
         Button(`${this.count}`, { type: ButtonType.Normal, stateEffect: true })
           .borderRadius(8)
@@ -34,17 +40,11 @@ export struct HomePage {
       .width('100%')
     }
     .onReady((context: NavDestinationContext) => {
-      return;
-      /*
+      //context.pathInfo.param;
       this.pathStack = context.pathStack;
       console.info('Current page ID: ' + context.pathInfo.name);
 
-      const sharedItem = context.pathInfo.param as Base_Model;
-      console.log("Main Page: " + sharedItem.slogan);
-      console.log("Full: " + JSON.stringify(sharedItem));
-
-      this.message = sharedItem.slogan;
-      */
+      //this.viewModel.requestData();
     })
   }
 }

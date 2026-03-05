@@ -7,7 +7,7 @@ export class BaseDetail_Model {
   @Trace modifiedTime: string = '';
 
   // TODO detailPic
-  constructor (data: Record<string, Object>) {
+  constructor(data: Record<string, Object>) {
     this.title = JsonUtils.getString(data, "title");
     this.desc = JsonUtils.getString(data, "desc");
     this.modifiedTime = JsonUtils.getString(data, "detail_modifiedtime");

@@ -1,57 +1,78 @@
-import { BaseInitedDataRequest, ServerRequest, decryptAndParseTask, InitConst } from '../../utils';
+import { ServerRequest, decryptAndParseTask, InitConst, JsonUtils } from '../../utils';
 import { Base_Model, BaseSearch_Model, BaseDetail_Model } from '../model';
 import { JSON, taskpool } from '@kit.ArkTS';
 
+// It is now a ListViewModel - TODO
 @ObservedV2
 export class Base_ViewModel<T extends Base_Model<BaseSearch_Model, BaseDetail_Model>> {
   // @Trace ensures any View bound to these will update instantly
   @Trace isLoading: boolean = false;
   @Trace errorMessage: string = '';
-  @Trace status: string = "Idle";
+  @Trace items: T[] = [];
 
-  @Trace item?: T;
+  /**
+   * This is the function the derived class MUST override.
+   * It returns the "How to create T" logic.
+   */
+  protected getFactory(): (data: Record<string, Object>) => T {
+    throw new Error("getFactory() must be implemented in the derived class");
+  }
 
-  async refreshProfile() {
+  protected getUrl(): string {
+    return "";
+  }
+
+  protected getParams(): Record<string, string> {
+    return {};
+  }
+
+  async initializeModelList() {//(data: Array<Record<string, Object>>) {
+    const data = await this.requestData();
+    const dataItems = JsonUtils.getArray(data, 'Items');
+    const factory = this.getFactory();
+    this.items = dataItems.map(item => factory(item));
+    console.log('Initialize Success!');
+  }
+
+  async requestData(): Promise<Record<string, Object>> {
     this.isLoading = true;
     try {
-      // 1. Request data
-      const params: Record<string, string> = {
-        'ios_version_name': '3.14.2.0',
-        'lang': 'zh'
-      };
-      const data = await ServerRequest.request("https://www.28hse.com/init_app.php", params);
-      const homeData = await ServerRequest.request("https://www.28hse.com");
-      console.log("Home: " + homeData.encrypt.toString());
+      // URL and Param construction, Data fetching and decryption, Passing to model constructor
+      // => should all be in Repository (now just for testing)
 
-      const testSearch = await ServerRequest.request("https://www.28hse.com/en/property/dosearch");
-      console.log("List: " + testSearch.encrypt.toString());
+      // 1. Request data (technically ServerRequest should also do in Taskpool)
+      const url = this.getUrl();
+      const params = this.getParams();
+      const rawJson = await ServerRequest.request(url, params);
+      console.log("Raw Json: " + rawJson.encrypt.toString());
 
-      const testResult = testSearch.data as BaseInitedDataRequest;
-      const testResultString = testResult.results as string;
-      console.log("Start decrypting...");
+      // InitApp format is different
+      let result = rawJson.data;
 
-      const task = new taskpool.Task(
-        decryptAndParseTask,
-        testResultString,
-        InitConst.AES_KEY,
-        InitConst.AES_IV
-      );
+      // Requires decrypt!
+      if (rawJson.encrypt != 0) {
+        const rawJsonResults = JsonUtils.getString(rawJson.data, 'results');
+        console.log("Start Decrypting: " + rawJsonResults);
 
-      // We 'await' here, but notice the FrameCounter in the UI keeps moving!
-      const result = await taskpool.execute(task);
-      console.log("Finished Decrypt: " + JSON.stringify(result));
+        const task = new taskpool.Task(
+          decryptAndParseTask,
+          rawJsonResults,
+          InitConst.AES_KEY,
+          InitConst.AES_IV
+        );
+        result = await taskpool.execute(task) as Record<string, Object>;
+        console.log("Finished Decryption!");
+      }
 
+      console.log("Result Json: " + JSON.stringify(result));
+      return result;
+
+      //const testSearch = await ServerRequest.request("https://www.28hse.com/en/property/dosearch");
+
+      // --OLD--
       //const d1 = await StringUtils.aesDecryptJSON<UserModel>(testResult.results as string);
-      //console.log("Test: " + JSON.stringify(d1));
-      //console.log("UserModel: " + d1?.buyRent);
-
-      //const homeData = await ServerRequest.request("https://www.28hse.com");
-      //const decrypted = await StringUtils.aesDecryptJSON<Base_Model>(homeData.data as string);
-      //console.log("Slogan: " + decrypted?.slogan);
-
 
     } catch (err) {
-      // Handle error (e.g., show toast)
       console.error("View Model Error:", err.message, err.stack);
       throw err as Error;
     } finally {

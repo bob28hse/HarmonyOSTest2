@@ -1,2 +1,2 @@
 export * from './model';
-//export * from './viewmodel';
+export { Schoolnet_ViewModel } from './viewmodel/Schoolnet_ViewModel';

@@ -9,7 +9,7 @@ type DetailFactory<D> = (data: Record<string, Object>) => D;
 @ObservedV2
 export class Base_Model<Search extends BaseSearch_Model, Detail extends BaseDetail_Model> {
   // Essentials properties
-  @Trace id: string = '';
+  @Trace id: number = 0;
   @Trace url: string = '';
 
   @Trace search: Search | null = null;
@@ -18,12 +18,12 @@ export class Base_Model<Search extends BaseSearch_Model, Detail extends BaseDeta
   // for ViewModel/Repository creating it
   // (if Interface => no need, it directs)
   // (JSON.parse & as => lost all the functions of class)
-  constructor (
+  constructor(
     data: Record<string, Object>,
     searchFactory: SearchFactory<Search>,
     detailFactory: DetailFactory<Detail>
   ) {
-    this.id = JsonUtils.getString(data, "id");
+    this.id = JsonUtils.getNumber(data, "id");
     this.url = JsonUtils.getString(data, "search_url");
 
     // Pass the correct sub-json to Factory

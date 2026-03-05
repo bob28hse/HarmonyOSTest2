@@ -1,9 +1,12 @@
+import { Schoolnet_ViewModel } from "common_lib";
+
 @ComponentV2
 export struct SchoolNetPage {
   @Local message: string = 'School Net Page';
   @Local count: number = 0;
 
   @Local pathStack: NavPathStack = new NavPathStack();
+  @Local viewModel: Schoolnet_ViewModel = new Schoolnet_ViewModel();
 
   build() {
     NavDestination(){
@@ -17,8 +20,6 @@ export struct SchoolNetPage {
             middle: { anchor: '__container__', align: HorizontalAlign.Center }
           })
           .onClick(() => {
-            this.message = 'Welcome2';
-
 
           })
         Button(`${this.count}`, { type: ButtonType.Normal, stateEffect: true })
@@ -29,13 +30,25 @@ export struct SchoolNetPage {
           .onClick(() => {
             this.count++;
           })
+
+        List() {
+          Repeat(this.viewModel.items)
+            .each((listChild) => {
+              ListItem() {
+                Text(listChild.item.name)
+              }
+            })
+            .key((item) => item.id.toString())
+        }
       }
       .height('100%')
       .width('100%')
     }
     .onReady((context: NavDestinationContext) => {
-      return;
+      this.pathStack = context.pathStack;
+      console.info('Current page ID: ' + context.pathInfo.name);
 
+      const result = this.viewModel.initializeModelList();
     })
   }
 }

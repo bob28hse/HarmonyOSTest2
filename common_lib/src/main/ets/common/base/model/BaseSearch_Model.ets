@@ -6,7 +6,7 @@ export class BaseSearch_Model {
   @Trace desc: string = '';
 
   // TODO coverPic
-  constructor (data: Record<string, Object>) {
+  constructor(data: Record<string, Object>) {
     this.title = JsonUtils.getString(data, "search_title");
     this.desc = JsonUtils.getString(data, "search_desc");
   }
