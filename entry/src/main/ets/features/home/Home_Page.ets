@@ -44,7 +44,7 @@ export struct HomePage {
       this.pathStack = context.pathStack;
       console.info('Current page ID: ' + context.pathInfo.name);
 
-      //this.viewModel.requestData();
+      this.viewModel.requestData();
     })
   }
 }

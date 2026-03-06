@@ -98,7 +98,7 @@ export async function decryptAndParseTask<T>(ciphertext: string, aesKey: string,
 
       const actualBytes = new Uint8Array(outBuffer, 0, strm.totalOut);
 
-      // Regex method only returns first one (*Using deprecated 'decode' is faster)
+      // Regex method only returns first one (*Using deprecated 'decode' is a bit faster)
       let decoder = util.TextDecoder.create('utf-8');
       finalString = decoder.decodeToString(actualBytes);
       const match = finalString.match(/^\{[\s\S]*\}|\[[\s\S]*\]/);

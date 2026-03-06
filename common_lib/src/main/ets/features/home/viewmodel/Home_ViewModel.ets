@@ -12,11 +12,4 @@ export class Home_ViewModel extends Base_ViewModel<Home_Model>{
     return "https://www.28hse.com/en";
   }
 
-  protected override getParams(): Record<string, string> {
-    return {};
-    return {
-      'ios_version_name': '3.14.2.0',
-      'lang': 'zh'
-    };
-  }
 }
